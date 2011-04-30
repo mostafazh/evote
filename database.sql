@@ -1,5 +1,8 @@
+-- Drop a database called evote if it exists
 DROP  DATABASE IF EXISTS `evote`;
+-- Create a new database called evote
 CREATE DATABASE `evote`;
+-- Use/Switch to this database
 USE `evote`;
 
 -- ---
