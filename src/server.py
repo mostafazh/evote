@@ -7,7 +7,7 @@ import select
 import socket
 import sys
 import threading
-from modules.user import User
+from models.user import User
 
 '------------------------------------------ServerApp----------------------------------------'
 

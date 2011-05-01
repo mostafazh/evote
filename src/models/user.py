@@ -15,21 +15,14 @@ try:
 except OperationalError:
     print "Please check the Database connection"
     exit()
-
 class User:
     
     def __init__(self, id, email):
         self.id = id
-        self.email = email
+        self.email = email  
     
     def login(email, password):
-        hasher = hashlib.new('sha1')
-        hasher.update(password)
-        passhash = hasher.hexdigest()
-        curs.execute("SELECT user_id FROM user WHERE email='%s' AND password='%s'"
-                     %(email, passhash))
-        
-        return User(curs.lastrowid, email)
+        pass
     login = staticmethod(login)
     
     def register(email, password):
@@ -51,12 +44,7 @@ class User:
     register = staticmethod(register)
     
     def verify(email, code):
-        try:
-            curs.execute("SELECT user_id FROM user WHERE vcode='%s' VALUES ('%s', '%s', '%s', '%s')"
-                        %(email, code, passhash, randhash))
-        except IntegrityError:
-            pass
-        return User(10, email)
+        pass
     verify = staticmethod(verify)
     
     def vote(self, poll_id, vote):
