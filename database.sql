@@ -13,7 +13,7 @@ USE `evote`;
 DROP TABLE IF EXISTS `user`;
 		
 CREATE TABLE `user` (
-  `user_id` INTEGER(50) NOT NULL AUTO_INCREMENT,
+  `user_id` INTEGER(11) NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(100) NOT NULL,
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(40) NOT NULL,
@@ -32,14 +32,16 @@ CREATE TABLE `user` (
 DROP TABLE IF EXISTS `poll`;
 
 CREATE TABLE `poll` (
-  `poll_id` INTEGER(50) NOT NULL AUTO_INCREMENT,
+  `poll_id` INTEGER(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(200) NOT NULL,
-  `description` MEDIUMTEXT NOT NULL,
-  `created` DATETIME NOT NULL,
-  `ends` DATETIME NOT NULL,
-  `state` MEDIUMTEXT NOT NULL,
-  `public_key` VARCHAR(500) NOT NULL,
-  `private_key` VARCHAR(700) DEFAULT NULL,
+  `description` TEXT NOT NULL,
+  `created` DATE NOT NULL,
+  `ends` DATE NOT NULL,
+  `base` INTEGER(11) NOT NULL,
+  `choices_num` INTEGER(11) NOT NULL,
+  `state` TEXT NOT NULL,
+  `public_key` TEXT NOT NULL,
+  `private_key` TEXT DEFAULT NULL,
   PRIMARY KEY (`poll_id`)
 );
 
@@ -51,9 +53,9 @@ CREATE TABLE `poll` (
 DROP TABLE IF EXISTS `vote`;
 		
 CREATE TABLE `vote` (
-  `poll_id` INTEGER(50) NOT NULL,
-  `user_id` INTEGER(50) NOT NULL,
-  `value` VARCHAR(300) DEFAULT NULL,
+  `poll_id` INTEGER(11) NOT NULL,
+  `user_id` INTEGER(11) NOT NULL,
+  `value` TEXT DEFAULT NULL,
   PRIMARY KEY (`poll_id`, `user_id`)
 );
 
@@ -65,9 +67,9 @@ CREATE TABLE `vote` (
 DROP TABLE IF EXISTS `polladmin`;
 		
 CREATE TABLE `polladmin` (
-  `poll_id` INTEGER(50) NOT NULL,
-  `user_id` INTEGER(50) NOT NULL,
-  `key_chunk` VARCHAR(300) NOT NULL,
+  `poll_id` INTEGER(11) NOT NULL,
+  `user_id` INTEGER(11) NOT NULL,
+  `key_chunk` TEXT NOT NULL,
   PRIMARY KEY (`poll_id`, `user_id`),
   KEY (`poll_id`)
 );
@@ -80,10 +82,10 @@ CREATE TABLE `polladmin` (
 DROP TABLE IF EXISTS `choice`;
 		
 CREATE TABLE `choice` (
-  `poll_id` INTEGER(50) NOT NULL,
-  `choice_id` INTEGER NOT NULL,
-  `choice_value` VARCHAR(300) NOT NULL,
-  `choice_result` VARCHAR(100) DEFAULT NULL,
+  `poll_id` INTEGER(11) NOT NULL,
+  `choice_id` INTEGER(11) NOT NULL,
+  `choice_value` TEXT NOT NULL,
+  `choice_result` INTEGER(11) DEFAULT NULL,
   PRIMARY KEY (`choice_id`, `poll_id`),
   KEY (`poll_id`)
 );
