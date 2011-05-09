@@ -16,5 +16,8 @@ while running:
         client_socket.send(data)                        # Send a close command to server to close assigned socket on the server.
         client_socket.close()                           # Close client socket.
         running = 0                                     # Set "running" flag to false to exit the loop.
-    else :
+    elif data == "r" :
+        rsp = client_socket.recv( 1024 )
+        print "RESP : " + rsp
+    else:
         client_socket.send(data)                        # Send input data to server.

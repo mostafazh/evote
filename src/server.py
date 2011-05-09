@@ -7,7 +7,8 @@ import select
 import socket
 import sys
 import threading
-from models.user import User
+from models.user import User, Poll
+
 
 '------------------------------------------ServerApp----------------------------------------'
 
@@ -82,13 +83,16 @@ class ClientHandler( threading.Thread ):
 
     def run( self ):
         running = 1
-        while running:
-            data = self.client_socket.recv( self.msgSize )       
-            if data == "close" :
-                self.client_socket.close()                        
-                running = 0                                      
-            else :
-                self.parse_request(data)
+        try:
+            while running:
+                data = self.client_socket.recv( self.msgSize )       
+                if data == "close" :
+                    self.client_socket.close()                        
+                    running = 0                                      
+                else :
+                    self.parse_request(data)
+        except:
+            self.client_socket.close()
     
     def parse_request(self, data):
         tokenz = data.split("#")
@@ -96,17 +100,66 @@ class ClientHandler( threading.Thread ):
         args = tokenz[1:]
         if not self.loggedin:
             if code == "LGN_REQ":
-                self.user = User.login(args[0], args[1])
-                #self.client_socket.send()
+                x = User.login(args[0], args[1])
+                if x == 0:
+                    self.client_socket.send("LGN_RES#0\n")
+                elif x == 2:
+                    self.client_socket.send("LGN_RES#2\n")
+                else:
+                    self.user = x
+                    self.loggedin = True
+                    self.client_socket.send("LGN_RES#1\n")
+                    
             elif code == "REG_REQ":
-                User.register(args[0], args[1])
-                pass
-                #self.client_socket.send()
-            elif code == "VER_REQ":
-                self.user = User.verify(args[0], args[1])
-                #self.client_socket.send()
+                x = User.register(args[0], args[1])
+                if x == 0:
+                    self.client_socket.send("REG_RES#0\n")
+                elif x == 1:
+                    self.client_socket.send("REG_RES#1\n")
+                    
+            elif code == "ACT_REQ":
+                x = User.verify(args[0], args[1])
+                if x == 0:
+                    self.client_socket.send("ACT_RES#0\n")
+                else:
+                    self.user = x
+                    self.loggedin = True
+                    self.client_socket.send("ACT_RES#1\n")
         else:
-            pass
+            if code == "MAK_VOT":
+                x = self.user.vote(args[0], args[1])
+                if x == 0:
+                    self.client_socket.send("RES_VOT#0\n")
+                elif x == 1:
+                    self.client_socket.send("RES_VOT#1\n")
+            
+            elif code == "POLL_REQ":
+                x = Poll.get_by_id(args[0])
+                if x == 0:
+                    self.client_socket.send("POLL_RES#0\n")
+                else:
+                    self.client_socket.send("POLL_RES#"+str(x)+"\n")
+            elif code == "CHK_VOT":
+                x = self.user.check_vote(args[0])
+                if x == 0:
+                    self.client_socket.send("CHK_RES#0")
+                else:
+                    self.client_socket.send("CHK_RES#" + x +"\n")
+                
+            elif code == "LGO_REQ":
+                self.user = None
+                self.loggedin = False
+            elif code == "DCR_POL":
+                if self.user.is_admin == 1:
+                    poll = Poll.get_by_id(args[0])
+                    if poll == 0:
+                        self.client_socket.send("RES_VOT#0\n")
+                    else:
+                        poll.get_result(args[0])
+                else:
+                    self.client_socket.send("RES_VOT#2\n")
+            elif code == "":
+                pass 
 
 
 if __name__ == "__main__":

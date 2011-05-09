@@ -42,7 +42,7 @@ class Poll:
     
     def create(name, description, ends, max_voters, choices):
         base = max_voters + int(ceil(max_voters/10))
-        pal = Paillier(int(floor(log(base*(base**2),2))+4))
+        pal = Paillier(int(floor(log(base*(base**(len(choices))),2))+4))
         pal.generate_keys()
         public_key = str(pal.public_key['n']) + "#" + str(pal.public_key['g'])
         private_key = str(pal.private_key['n']) + "#" + str(pal.private_key['g'])+ "#" + str(pal.private_key['lam'])
@@ -75,7 +75,7 @@ class Poll:
         p = curs.fetchone()
         
         if p == None:
-            return "no poll with this id"
+            return 0
         
         curs.execute("""SELECT choice_value 
                         FROM choice 
@@ -117,9 +117,49 @@ class Poll:
                             % (result[choices[i]], poll_id, i+1))
             i -= 1  
         return result
+    def get_open_polls():
+        time = datetime.now()
+        datenow = date(time.year, time.month, time.day)
+        curs.execute("""SELECT * 
+                        FROM poll
+                        WHERE ends>'%s'"""
+                        % (datenow))
+        p = curs.fetchone()
+        polls = []
+        while not p == None:
+            curs.execute("""SELECT choice_value 
+                        FROM choice 
+                        WHERE poll_id=%s""" 
+                        % (int(p['poll_id'])))
+            result_choices = curs.fetchall()
+        
+            choices = []
+            for choice in result_choices:
+                choices.append(choice['choice_value'])
+                
+            public_key = str_to_key(p['public_key'])
+            
+            poll = Poll(int(p['poll_id']), p['name'], p['description'], p['created'], p['ends'], 
+                    int(p['base']), int(p['state']), public_key, choices, p['private_key'])
+            
+            polls.append(poll)
+            p = curs.fetchone()
+        return polls
     
+    def __str__(self):
+        poll = ""+ str(self.ends) + "#" + str(self.base) + "#" + str(self.public_key['g']) + "#" + str(self.public_key['n']) + "#" + self.description
+        
+        for choice in self.choices:
+            poll = poll + "#" + choice
+            
+        return poll
     
     '''Static methods'''
     
     create = staticmethod(create)
     get_by_id = staticmethod(get_by_id)
+    get_open_polls = staticmethod(get_open_polls)
+    
+if __name__ == "__main__":
+    p =  Poll.get_by_id(2)
+    print p

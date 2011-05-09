@@ -34,31 +34,38 @@ class User:
     
     
     def login(email, password):
-        pass
+        curs.execute("""SELECT user_id, username, email, vcode, is_admin, is_verified 
+                        FROM user 
+                        WHERE email='%s' AND password='%s'"""
+                        % (email, password))
+        row = curs.fetchone()
+        
+        if row == None:
+            return 0
+        elif row['is_verified'] == 0:
+            return 2
+
+        return User(row['user_id'], row['username'], row['email'], row['is_verified'], row['is_admin'])
     
     
     def register(email, password):
         username = email.split("@")[0]
         
-        hasher = hashlib.new('sha1')
-        hasher.update(password)
-        passhash = hasher.hexdigest()
-        
-        hasher2 = hashlib.new('md5')
-        hasher2.update(`randint(5000,1000000)`)
-        randhash = hasher2.hexdigest()
+        hasher = hashlib.new('md5')
+        hasher.update(`randint(5000,1000000)`)
+        ver_code = hasher.hexdigest()
         
         try:
             curs.execute("""INSERT INTO user 
                             (email, username, password, vcode) 
                             VALUES ('%s', '%s', '%s', '%s')"""
-                            % (email, username, passhash, randhash))
+                            % (email, username, password, ver_code))
         except IntegrityError:
-            return "user with same email exists."
+            return 0
         
         curs.lastrowid
-        mail(email, "EVote account activation", str(randhash))
-        return "good"
+        mail(email, "EVote account activation", str(ver_code))
+        return 1
     
     
     def get_by_id(id):
@@ -83,7 +90,7 @@ class User:
         if row == None:
             return "no user with this email"
         elif not row['vcode'] == code:
-            return "verification code is wrong"
+            return 0
         
         user = User(row['user_id'], row['username'], row['email'], 1, row['is_admin'])
         user.flush()
@@ -98,16 +105,23 @@ class User:
                             % (poll_id, self.id, vote))
         
         except IntegrityError:
-            return "user voted befor"
+            return 0
         
         poll = Poll.get_by_id(poll_id)
         poll.update_state(vote)
-        return "good"
+        return 1
     
     
-    def check_vote(self):
-        pass
-    
+    def check_vote(self, poll_id):
+        curs.execute("""SELECT value
+                        FROM vote 
+                        WHERE user_id=%s AND poll_id=%s"""
+                        % (self.id, poll_id))
+        row = curs.fetchone()
+        
+        if row == None:
+            return 0
+        return row['value']
     
     '''Static methods'''
     
@@ -115,3 +129,8 @@ class User:
     register = staticmethod(register)
     get_by_id = staticmethod(get_by_id)
     verify = staticmethod(verify)
+    
+if __name__ == "__main__":
+    usr =  User.login("ahmed.mohamed.hussien@gmail.com", "7c4a8d09ca3762af61e59520943dc26494f8941b")
+    print usr.check_vote(1)
+    print User.verify("ahmed.mohamed.hussien@gmail.com", "73a78884c0831c303ab9896f79c2935aa")
