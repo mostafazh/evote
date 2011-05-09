@@ -155,10 +155,10 @@ class ClientHandler( threading.Thread ):
                     if poll == 0:
                         self.client_socket.send("RES_VOT#0\n")
                     else:
-                        poll.get_result(args[0])
+                        poll.get_result(poll.private_key)
                 else:
                     self.client_socket.send("RES_VOT#2\n")
-            elif code == "":
+            elif code == "create":
                 pass 
 
 
